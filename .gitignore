@@ -1,0 +1,13 @@
+node_modules
+dist
+.DS_Store
+*.local
+.env
+.env.*
+
+# Generated at build time (committed fallback exists)
+# src/generated/rom-manifest.json is updated by scripts — keep tracked
+
+# IDE
+.idea
+.vscode

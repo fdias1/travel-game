@@ -1,0 +1,7 @@
+This project uses mGBA (WebAssembly build via @thenick775/mgba-wasm).
+
+mGBA is Copyright © 2013–2026 Jeffrey Pfau and contributors.
+Licensed under the Mozilla Public License 2.0 (MPL-2.0).
+
+Upstream: https://github.com/mgba-emu/mgba
+WASM fork: https://github.com/thenick775/mgba/tree/feature/wasm

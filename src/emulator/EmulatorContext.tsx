@@ -19,6 +19,8 @@ import {
 } from '../storage/saveStates';
 import { loadBatterySave, storeBatterySave } from '../storage/batterySaves';
 import { syncFilesystem } from './mgbaBindings';
+import { loadMgbaFactory } from './loadMgba';
+import { readSaveStateSlot, writeSaveStateSlot } from './saveStateFs';
 
 export type MgbaModule = MGBA.mGBAEmulator;
 
@@ -44,8 +46,6 @@ interface EmulatorContextValue {
 
 const EmulatorContext = createContext<EmulatorContextValue | null>(null);
 
-const mgbaUrl = `${import.meta.env.BASE_URL}wasm/mgba.js`;
-
 let moduleSingleton: MgbaModule | null = null;
 let modulePromise: Promise<MgbaModule> | null = null;
 
@@ -55,10 +55,7 @@ async function createModule(canvas: HTMLCanvasElement): Promise<MgbaModule> {
   }
   if (!modulePromise) {
     modulePromise = (async () => {
-      const imported = await import(/* @vite-ignore */ mgbaUrl);
-      const factory = imported.default as (options: {
-        canvas: HTMLCanvasElement;
-      }) => Promise<MgbaModule>;
+      const factory = await loadMgbaFactory();
       const instance = await factory({ canvas });
       await instance.FSInit();
       moduleSingleton = instance;
@@ -157,12 +154,7 @@ export function EmulatorProvider({ children }: { children: ReactNode }) {
       for (const slot of [0, 1, 2]) {
         const data = await loadSaveStateSlot(romId, slot);
         if (!data) continue;
-        const stateFile = new File([Uint8Array.from(data)], `slot-${slot}.ss0`, {
-          type: 'application/octet-stream',
-        });
-        await new Promise<void>((resolve) => {
-          module.uploadSaveOrSaveState(stateFile, () => resolve());
-        });
+        writeSaveStateSlot(module, slot, data);
       }
 
       return true;
@@ -188,15 +180,18 @@ export function EmulatorProvider({ children }: { children: ReactNode }) {
 
   const saveStateToSlot = useCallback(
     async (romId: string, slot: number) => {
-      if (!module) return false;
+      if (!module || !module.gameName) return false;
+
+      module.resumeGame();
       const ok = module.saveState(slot);
       if (!ok) return false;
-      module.forceAutoSaveState();
-      const auto = module.getAutoSaveState();
-      if (auto) {
-        await storeAutoSaveState(romId, auto.autoSaveStateName, auto.data);
-        await storeSaveStateSlot(romId, slot, auto.data);
-      }
+
+      await syncFilesystem(module);
+
+      const data = readSaveStateSlot(module, slot);
+      if (!data) return false;
+
+      await storeSaveStateSlot(romId, slot, data);
       await syncPersistence(romId);
       return true;
     },
@@ -205,17 +200,19 @@ export function EmulatorProvider({ children }: { children: ReactNode }) {
 
   const loadStateFromSlot = useCallback(
     async (romId: string, slot: number) => {
-      if (!module) return false;
+      if (!module || !module.gameName) return false;
+
       const fromIdb = await loadSaveStateSlot(romId, slot);
       if (fromIdb) {
-        const file = new File([Uint8Array.from(fromIdb)], `slot-${slot}.ss0`, {
-          type: 'application/octet-stream',
-        });
-        await new Promise<void>((resolve) => {
-          module.uploadSaveOrSaveState(file, () => resolve());
-        });
+        writeSaveStateSlot(module, slot, fromIdb);
       }
-      return module.loadState(slot);
+
+      module.resumeGame();
+      const loaded = module.loadState(slot);
+      if (loaded) {
+        module.resumeAudio();
+      }
+      return loaded;
     },
     [module],
   );

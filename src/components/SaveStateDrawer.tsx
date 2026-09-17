@@ -1,13 +1,20 @@
 interface SaveStateDrawerProps {
   open: boolean;
+  message: string | null;
   onClose: () => void;
-  onSave: (slot: number) => void;
-  onLoad: (slot: number) => void;
+  onSave: (slot: number) => void | Promise<void>;
+  onLoad: (slot: number) => void | Promise<void>;
 }
 
 const SLOTS = [0, 1, 2];
 
-export function SaveStateDrawer({ open, onClose, onSave, onLoad }: SaveStateDrawerProps) {
+export function SaveStateDrawer({
+  open,
+  message,
+  onClose,
+  onSave,
+  onLoad,
+}: SaveStateDrawerProps) {
   if (!open) return null;
 
   return (
@@ -19,15 +26,26 @@ export function SaveStateDrawer({ open, onClose, onSave, onLoad }: SaveStateDraw
             ×
           </button>
         </header>
+        {message && <p className="drawer-message">{message}</p>}
         <ul className="slot-list">
           {SLOTS.map((slot) => (
             <li key={slot}>
               <span>Slot {slot + 1}</span>
               <div className="slot-actions">
-                <button type="button" onClick={() => onSave(slot)}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void onSave(slot);
+                  }}
+                >
                   Save
                 </button>
-                <button type="button" onClick={() => onLoad(slot)}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void onLoad(slot);
+                  }}
+                >
                   Load
                 </button>
               </div>

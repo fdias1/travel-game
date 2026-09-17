@@ -9,10 +9,18 @@ interface DpadProps {
 export function Dpad({ onPress, onRelease }: DpadProps) {
   return (
     <div className="dpad" aria-label="Directional pad">
-      <GameButton label="Up" button="Up" className="dpad-up" onPress={onPress} onRelease={onRelease} />
-      <GameButton label="Left" button="Left" className="dpad-left" onPress={onPress} onRelease={onRelease} />
-      <GameButton label="Right" button="Right" className="dpad-right" onPress={onPress} onRelease={onRelease} />
-      <GameButton label="Down" button="Down" className="dpad-down" onPress={onPress} onRelease={onRelease} />
+      <GameButton label="Up" button="Up" className="dpad-btn dpad-up" onPress={onPress} onRelease={onRelease}>
+        ▲
+      </GameButton>
+      <GameButton label="Left" button="Left" className="dpad-btn dpad-left" onPress={onPress} onRelease={onRelease}>
+        ◀
+      </GameButton>
+      <GameButton label="Right" button="Right" className="dpad-btn dpad-right" onPress={onPress} onRelease={onRelease}>
+        ▶
+      </GameButton>
+      <GameButton label="Down" button="Down" className="dpad-btn dpad-down" onPress={onPress} onRelease={onRelease}>
+        ▼
+      </GameButton>
     </div>
   );
 }

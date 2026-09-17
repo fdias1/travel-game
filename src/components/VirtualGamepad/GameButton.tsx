@@ -1,10 +1,11 @@
-import type { PointerEvent } from 'react';
+import type { PointerEvent, ReactNode } from 'react';
 import type { MgbaButton } from '../../emulator/mgbaBindings';
 
 interface GameButtonProps {
   label: string;
   button: MgbaButton;
   className?: string;
+  children?: ReactNode;
   onPress: (button: MgbaButton) => void;
   onRelease: (button: MgbaButton) => void;
 }
@@ -13,6 +14,7 @@ export function GameButton({
   label,
   button,
   className,
+  children,
   onPress,
   onRelease,
 }: GameButtonProps) {
@@ -37,7 +39,7 @@ export function GameButton({
       onPointerCancel={handlePointerUp}
       onPointerLeave={handlePointerUp}
     >
-      {label}
+      {children ?? label}
     </button>
   );
 }

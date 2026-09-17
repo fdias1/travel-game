@@ -30,6 +30,7 @@ export default defineConfig({
           '**/*.{js,css,html,ico,png,svg,wasm,gb,gbc,gba,json,webmanifest,txt}',
           'roms/**/*',
         ],
+        maximumFileSizeToCacheInBytes: 32 * 1024 * 1024,
       },
       includeAssets: ['wasm/**/*', 'icons/**/*'],
       manifest: {

@@ -36,6 +36,7 @@ export function GamePlayerPage() {
   const viewportPortrait = useViewportPortrait();
   const [layoutOverride, setLayoutOverride] = useState<LayoutMode | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [bootError, setBootError] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
   const { status, module, loadRomAsset, quitGame, saveStateToSlot, loadStateFromSlot, syncPersistence } =
@@ -125,7 +126,7 @@ export function GamePlayerPage() {
 
       <div className="player-stage">
         <div className="screen-shell">
-          <EmulatorCanvas />
+          <EmulatorCanvas scaleKey={started ? `${rom.id}-${layout}` : undefined} />
           {!started && (
             <div className="start-overlay">
               {status === 'loading' && <p>Starting emulator…</p>}
@@ -142,12 +143,31 @@ export function GamePlayerPage() {
 
       <SaveStateDrawer
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        onSave={(slot) => {
-          void saveStateToSlot(rom.id, slot);
+        message={saveMessage}
+        onClose={() => {
+          setDrawerOpen(false);
+          setSaveMessage(null);
         }}
-        onLoad={(slot) => {
-          void loadStateFromSlot(rom.id, slot);
+        onSave={async (slot) => {
+          if (!started) {
+            setSaveMessage('Start the game before saving.');
+            return;
+          }
+          const ok = await saveStateToSlot(rom.id, slot);
+          setSaveMessage(ok ? `Saved to slot ${slot + 1}.` : `Could not save slot ${slot + 1}.`);
+        }}
+        onLoad={async (slot) => {
+          if (!started) {
+            setSaveMessage('Start the game before loading.');
+            return;
+          }
+          const ok = await loadStateFromSlot(rom.id, slot);
+          setSaveMessage(
+            ok ? `Loaded slot ${slot + 1}.` : `No save in slot ${slot + 1} yet.`,
+          );
+          if (ok) {
+            setDrawerOpen(false);
+          }
         }}
       />
     </div>
